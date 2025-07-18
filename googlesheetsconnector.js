@@ -1,3 +1,5 @@
+const { google } = require('googleapis')
+const crypto = require('crypto')
 const DEFAULT_SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 /**

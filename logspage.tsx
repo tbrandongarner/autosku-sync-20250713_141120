@@ -1,13 +1,41 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import {
+  Page,
+  Layout,
+  Card,
+  Filters,
+  ResourceList,
+  Badge,
+  Button,
+  Spinner,
+  Modal,
+  Stack,
+  TextStyle,
+  Toast,
+} from '@shopify/polaris'
+import { useAuthenticatedFetch } from './hooks'
+
+interface Log {
+  id: string
+  timestamp: string
+  level: string
+  message: string
+}
+
+interface LogsPageProps {
+  merchantId: string
+}
+
 export function LogsPage({merchantId}: LogsPageProps) {
   const authenticatedFetch = useAuthenticatedFetch()
-  const [logs, setLogs] = useState<Log[]>([])
-  const [loading, setLoading] = useState<boolean>(false)
-  const [filterQuery, setFilterQuery] = useState<string>('')
-  const [filterLevel, setFilterLevel] = useState<string[]>([])
-  const [showFilters, setShowFilters] = useState<boolean>(false)
-  const [isClearModalActive, setIsClearModalActive] = useState<boolean>(false)
-  const [toastActive, setToastActive] = useState<boolean>(false)
-  const [toastContent, setToastContent] = useState<string>('')
+  const [logs, setLogs] = useState([] as Log[])
+  const [loading, setLoading] = useState(false)
+  const [filterQuery, setFilterQuery] = useState('')
+  const [filterLevel, setFilterLevel] = useState([] as string[])
+  const [showFilters, setShowFilters] = useState(false)
+  const [isClearModalActive, setIsClearModalActive] = useState(false)
+  const [toastActive, setToastActive] = useState(false)
+  const [toastContent, setToastContent] = useState('')
 
   const availableFilters = useMemo(
     () => [
@@ -60,7 +88,7 @@ export function LogsPage({merchantId}: LogsPageProps) {
   }, [])
 
   const toggleFilters = useCallback(() => {
-    setShowFilters((prev) => !prev)
+    setShowFilters((prev: boolean) => !prev)
   }, [])
 
   const fetchLogs = useCallback(async () => {
@@ -145,13 +173,14 @@ export function LogsPage({merchantId}: LogsPageProps) {
               ) : (
                 <ResourceList
                   items={logs}
-                  renderItem={(log) => {
+                  renderItem={(log: Log) => {
                     const {id, timestamp, level, message} = log
-                    const levelMarkup = {
+                    const levelMap: Record<string, any> = {
                       info: <Badge status="info">Info</Badge>,
                       warning: <Badge status="warning">Warning</Badge>,
                       error: <Badge status="critical">Error</Badge>,
-                    }[level]
+                    }
+                    const levelMarkup = levelMap[level]
                     return (
                       <ResourceList.Item id={id} accessibilityLabel={`Log ${id}`}>
                         <Stack wrap={false} alignment="center">

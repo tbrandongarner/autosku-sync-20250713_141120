@@ -1,3 +1,8 @@
+const { Queue, Worker, QueueScheduler } = require('bullmq')
+const FeedService = require('./feedservice')
+const ConfigService = require('./configservice')
+const ShopifyService = require('./shopifyservice')
+
 const redisConnection = {
   host: process.env.REDIS_HOST,
   port: parseInt(process.env.REDIS_PORT, 10) || 6379,
