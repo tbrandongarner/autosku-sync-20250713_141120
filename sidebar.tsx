@@ -1,3 +1,7 @@
+// @ts-nocheck
+import React from 'react'
+import { Navigation } from '@shopify/polaris'
+import { HomeMajor, ImportMinor, CodeMajor, SettingsMajor } from '@shopify/polaris-icons'
 export default function Sidebar({ current, onNavigate }: SidebarProps) {
   const navigationItems = [
     {

@@ -1,10 +1,31 @@
+import React from 'react'
+import {
+  Page,
+  Button,
+  Layout,
+  Card,
+  Banner,
+  Stack,
+  Spinner,
+  DataTable,
+  TextContainer,
+} from '@shopify/polaris'
+import { useQuery } from 'react-query'
+import {
+  fetchSyncStatus,
+  fetchUsageStatistics,
+  fetchAppHealth,
+  SyncStatus,
+  UsageStatistics,
+  AppHealth,
+} from './api'
 const DASHBOARD_STALE_TIME = 1000 * 60 * 5
 
 interface DashboardProps {
   merchantId: string
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ merchantId }) => {
+function Dashboard({ merchantId }: DashboardProps) {
   const {
     data: syncStatus,
     isLoading: isLoadingSync,
@@ -12,7 +33,7 @@ const Dashboard: React.FC<DashboardProps> = ({ merchantId }) => {
     isError: isErrorSync,
     error: errorSync,
     refetch: refetchSync,
-  } = useQuery<SyncStatus, Error>(
+  } = useQuery(
     ['syncStatus', merchantId],
     () => fetchSyncStatus(merchantId),
     { staleTime: DASHBOARD_STALE_TIME }
@@ -25,7 +46,7 @@ const Dashboard: React.FC<DashboardProps> = ({ merchantId }) => {
     isError: isErrorUsage,
     error: errorUsage,
     refetch: refetchUsage,
-  } = useQuery<UsageStatistics, Error>(
+  } = useQuery(
     ['usageStatistics', merchantId],
     () => fetchUsageStatistics(merchantId),
     { staleTime: DASHBOARD_STALE_TIME }
@@ -38,7 +59,7 @@ const Dashboard: React.FC<DashboardProps> = ({ merchantId }) => {
     isError: isErrorHealth,
     error: errorHealth,
     refetch: refetchHealth,
-  } = useQuery<AppHealth, Error>(
+  } = useQuery(
     ['appHealth', merchantId],
     () => fetchAppHealth(merchantId),
     { staleTime: DASHBOARD_STALE_TIME }

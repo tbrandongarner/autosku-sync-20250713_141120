@@ -1,11 +1,54 @@
-const MappingWizard: React.FC<MappingWizardProps> = ({existingConfig, onFinish}) => {
-  const [step, setStep] = useState<number>(0);
-  const [feedConfig, setFeedConfig] = useState<FeedConfig>(
-    existingConfig?.feedConfig || {sourceType: 'csv'},
-  );
-  const [fieldDefinitions, setFieldDefinitions] = useState<FieldDefinition[]>(
-    existingConfig?.fieldDefinitions || [],
-  );
+import React, { useState, useEffect, useCallback } from 'react'
+import {
+  Page,
+  Card,
+  FormLayout,
+  RadioButton,
+  DropZone,
+  Stack,
+  InlineError,
+  Button,
+  ButtonGroup,
+  TextField,
+  Select,
+  DataTable,
+} from '@shopify/polaris'
+import { nanoid } from 'nanoid'
+
+type FeedSourceType = 'csv' | 'google_sheets'
+
+interface FeedConfig {
+  sourceType: FeedSourceType
+  csvFile?: File
+  googleSheetId?: string
+  worksheetName?: string
+}
+
+interface FieldDefinition {
+  id: string
+  shopifyField: string
+  feedField: string
+  defaultValue?: string
+}
+
+interface MappingConfig {
+  feedConfig: FeedConfig
+  fieldDefinitions: FieldDefinition[]
+}
+
+interface MappingWizardProps {
+  existingConfig?: MappingConfig
+  onFinish: (config: MappingConfig) => void
+}
+
+function MappingWizard({ existingConfig, onFinish }: MappingWizardProps) {
+  const [step, setStep] = useState(0)
+  const [feedConfig, setFeedConfig] = useState(
+    existingConfig?.feedConfig || { sourceType: 'csv' }
+  )
+  const [fieldDefinitions, setFieldDefinitions] = useState(
+    existingConfig?.fieldDefinitions || []
+  )
 
   const handleNextFromFeed = (config: FeedConfig) => {
     setFeedConfig(config);
@@ -18,8 +61,8 @@ const MappingWizard: React.FC<MappingWizardProps> = ({existingConfig, onFinish})
   };
 
   const handleBack = () => {
-    setStep((s) => Math.max(s - 1, 0));
-  };
+    setStep((s: number) => Math.max(s - 1, 0))
+  }
 
   const handleFinish = () => {
     onFinish({feedConfig, fieldDefinitions});
@@ -59,27 +102,16 @@ interface StepSelectFeedProps {
   onNext: (config: FeedConfig) => void;
 }
 
-const MappingStepSelectFeed: React.FC<StepSelectFeedProps> = ({
-  initialConfig,
-  onNext,
-}) => {
-  const [sourceType, setSourceType] = useState<FeedSourceType>(
-    initialConfig.sourceType,
-  );
-  const [csvFile, setCsvFile] = useState<File | undefined>(
-    initialConfig.csvFile,
-  );
-  const [googleSheetId, setGoogleSheetId] = useState<string>(
-    initialConfig.googleSheetId || '',
-  );
-  const [worksheetName, setWorksheetName] = useState<string>(
-    initialConfig.worksheetName || '',
-  );
-  const [errors, setErrors] = useState<{
-    csvFile?: string;
-    googleSheetId?: string;
-    worksheetName?: string;
-  }>({});
+function MappingStepSelectFeed({ initialConfig, onNext }: StepSelectFeedProps) {
+  const [sourceType, setSourceType] = useState(initialConfig.sourceType as FeedSourceType)
+  const [csvFile, setCsvFile] = useState(initialConfig.csvFile as File | undefined)
+  const [googleSheetId, setGoogleSheetId] = useState(initialConfig.googleSheetId || '')
+  const [worksheetName, setWorksheetName] = useState(initialConfig.worksheetName || '')
+  const [errors, setErrors] = useState({} as {
+    csvFile?: string
+    googleSheetId?: string
+    worksheetName?: string
+  })
 
   const csvDropZoneID = 'csv-dropzone';
   const googleSheetIdFieldID = 'googleSheetId';
@@ -89,14 +121,14 @@ const MappingStepSelectFeed: React.FC<StepSelectFeedProps> = ({
     if (sourceType === 'csv') {
       setGoogleSheetId('');
       setWorksheetName('');
-      setErrors((prev) => ({
+      setErrors((prev: typeof errors) => ({
         ...prev,
         googleSheetId: undefined,
         worksheetName: undefined,
       }));
     } else {
       setCsvFile(undefined);
-      setErrors((prev) => ({...prev, csvFile: undefined}));
+      setErrors((prev: typeof errors) => ({ ...prev, csvFile: undefined }));
     }
   }, [sourceType]);
 
@@ -134,7 +166,7 @@ const MappingStepSelectFeed: React.FC<StepSelectFeedProps> = ({
     (_dropFiles: File[], acceptedFiles: File[]) => {
       if (acceptedFiles.length > 0) {
         setCsvFile(acceptedFiles[0]);
-        setErrors((prev) => ({...prev, csvFile: undefined}));
+        setErrors((prev: typeof errors) => ({ ...prev, csvFile: undefined }));
       }
     },
     [],
@@ -168,7 +200,7 @@ const MappingStepSelectFeed: React.FC<StepSelectFeedProps> = ({
                 <Button onClick={() => setCsvFile(undefined)}>
                   Remove
                 </Button>
-              </Stack.Item>
+              </Stack>
             )}
           </DropZone>
           {errors.csvFile && (
@@ -185,9 +217,9 @@ const MappingStepSelectFeed: React.FC<StepSelectFeedProps> = ({
             id={googleSheetIdFieldID}
             label="Google Sheet ID"
             value={googleSheetId}
-            onChange={(value) => {
+            onChange={(value: string) => {
               setGoogleSheetId(value);
-              setErrors((prev) => ({...prev, googleSheetId: undefined}));
+              setErrors((prev: typeof errors) => ({ ...prev, googleSheetId: undefined }));
             }}
             error={errors.googleSheetId}
           />
@@ -195,9 +227,9 @@ const MappingStepSelectFeed: React.FC<StepSelectFeedProps> = ({
             id={worksheetNameFieldID}
             label="Worksheet Name"
             value={worksheetName}
-            onChange={(value) => {
+            onChange={(value: string) => {
               setWorksheetName(value);
-              setErrors((prev) => ({...prev, worksheetName: undefined}));
+              setErrors((prev: typeof errors) => ({ ...prev, worksheetName: undefined }));
             }}
             error={errors.worksheetName}
           />
@@ -226,13 +258,13 @@ const shopifyFieldOptions = [
   {label: 'Inventory Quantity', value: 'inventory_quantity'},
 ];
 
-const MappingStepDefineFields: React.FC<StepDefineFieldsProps> = ({
+function MappingStepDefineFields({
   feedConfig,
   initialFields,
   onNext,
   onBack,
-}) => {
-  const [fields, setFields] = useState<FieldDefinition[]>(
+}: StepDefineFieldsProps) {
+  const [fields, setFields] = useState(
     initialFields.length > 0
       ? initialFields
       : [
@@ -242,22 +274,22 @@ const MappingStepDefineFields: React.FC<StepDefineFieldsProps> = ({
             feedField: '',
             defaultValue: '',
           },
-        ],
-  );
-  const [errors, setErrors] = useState<string>('');
+        ]
+  )
+  const [errors, setErrors] = useState('')
 
   const updateField = (
     id: string,
     key: keyof FieldDefinition,
     value: string,
   ) => {
-    setFields((prev) =>
-      prev.map((f) => (f.id === id ? {...f, [key]: value} : f)),
+    setFields((prev: FieldDefinition[]) =>
+      prev.map((f: FieldDefinition) => (f.id === id ? { ...f, [key]: value } : f)),
     );
   };
 
   const addRow = () => {
-    setFields((prev) => [
+    setFields((prev: FieldDefinition[]) => [
       ...prev,
       {
         id: nanoid(),
@@ -269,7 +301,7 @@ const MappingStepDefineFields: React.FC<StepDefineFieldsProps> = ({
   };
 
   const removeRow = (id: string) => {
-    setFields((prev) => prev.filter((f) => f.id !== id));
+    setFields((prev: FieldDefinition[]) => prev.filter((f: FieldDefinition) => f.id !== id));
   };
 
   const validate = (): boolean => {
@@ -284,8 +316,8 @@ const MappingStepDefineFields: React.FC<StepDefineFieldsProps> = ({
       }
     }
     const duplicates = fields
-      .map((f) => f.shopifyField)
-      .filter((v, i, arr) => v && arr.indexOf(v) !== i);
+      .map((f: FieldDefinition) => f.shopifyField)
+      .filter((v: string, i: number, arr: string[]) => v && arr.indexOf(v) !== i);
     if (duplicates.length > 0) {
       setErrors('Duplicate Shopify fields are not allowed.');
       return false;
@@ -304,7 +336,7 @@ const MappingStepDefineFields: React.FC<StepDefineFieldsProps> = ({
   return (
     <FormLayout>
       <Stack vertical spacing="tight">
-        {fields.map((f, idx) => (
+          {fields.map((f: FieldDefinition, idx: number) => (
           <Card key={f.id} sectioned>
             <FormLayout>
               <Select
@@ -312,21 +344,21 @@ const MappingStepDefineFields: React.FC<StepDefineFieldsProps> = ({
                 label={`Shopify Field #${idx + 1}`}
                 options={shopifyFieldOptions}
                 value={f.shopifyField}
-                onChange={(value) => updateField(f.id, 'shopifyField', value)}
+                  onChange={(value: string) => updateField(f.id, 'shopifyField', value)}
               />
               <TextField
                 id={`feedField-${f.id}`}
                 label="Feed Field"
                 value={f.feedField}
-                onChange={(value) => updateField(f.id, 'feedField', value)}
+                  onChange={(value: string) => updateField(f.id, 'feedField', value)}
               />
               <TextField
                 id={`defaultValue-${f.id}`}
                 label="Default Value (optional)"
                 value={f.defaultValue || ''}
-                onChange={(value) =>
-                  updateField(f.id, 'defaultValue', value)
-                }
+                  onChange={(value: string) =>
+                    updateField(f.id, 'defaultValue', value)
+                  }
               />
               <Button destructive onClick={() => removeRow(f.id)}>
                 Remove
@@ -358,11 +390,11 @@ interface StepReviewProps {
   onFinish: () => void;
 }
 
-const MappingStepReview: React.FC<StepReviewProps> = ({
+function MappingStepReview({
   mappingConfig,
   onBack,
   onFinish,
-}) => {
+}: StepReviewProps) {
   const {feedConfig, fieldDefinitions} = mappingConfig;
 
   const feedDetails = () => {
